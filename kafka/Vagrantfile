@@ -1,0 +1,69 @@
+# Vagrantfile API/syntax version.
+VAGRANTFILE_API_VERSION = "2"
+
+# Box metadata location and box name
+BOX_URL = "https://oracle.github.io/vagrant-projects/boxes"
+BOX_NAME = "oraclelinux/7"
+BOX_MEMORY = 4096
+
+# UI object for printing information
+ui = Vagrant::UI::Prefixed.new(Vagrant::UI::Colored.new, "vagrant")
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  # define hostname
+  VM_NAME = default_s('VM_NAME', 'ol7-kafka')
+
+  # define password
+  VM_PASSWORD = default_s('VM_PASSWORD', 'root')
+
+  # define password
+  VM_IPADDR = default_s('VM_IPADDR', '192.168.56.20')
+end
+
+def default_s(key, default)
+  ENV[key] && ! ENV[key].empty? ? ENV[key] : default
+end
+
+def default_i(key, default)
+  default_s(key, default).to_i
+end
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box_download_insecure =true
+  config.vm.box = BOX_NAME
+  config.vm.box_url = "#{BOX_URL}/#{BOX_NAME}.json"
+  config.vm.define VM_NAME
+
+  if Vagrant.has_plugin?("vagrant-env")
+    ui.info "Loading environment from .env files"
+    config.env.load(".env.local", ".env")
+  end
+
+  # change memory size
+  config.vm.provider "virtualbox" do |v|
+    v.memory = BOX_MEMORY
+    v.name = VM_NAME
+  end
+  config.vm.provider :libvirt do |v|
+    v.memory = BOX_MEMORY
+  end
+
+  # VM hostname
+  config.vm.hostname = VM_NAME
+
+  # VM private network
+  config.vm.network "private_network", ip: VM_IPADDR
+
+  # Initial shell
+  config.vm.provision "shell", inline: <<-SHELL
+    echo "sslverify=false" >> /etc/yum.conf
+    echo 'root' | passwd --stdin root
+    sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+    /sbin/service sshd restart
+  SHELL
+
+  # Provision everything on the first run
+  config.vm.provision "shell", path: "scripts/install.sh"
+  config.vm.provision "shell", inline: "echo 'INSTALLER: Installation complete, Oracle Linux 7 ready to use!'"
+end
+
