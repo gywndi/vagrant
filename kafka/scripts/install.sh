@@ -2,17 +2,31 @@
 
 echo 'INSTALLER: Started up'
 
-# yum update
-yum upgrade -y
+# Change root user
+if [ "$VM_PASSWORD" = "" ]; then
+  VM_PASSWORD='root'
+fi
 
-# install jdk
-yum install -y java-1.8.0-openjdk
+echo "root password: $VM_PASSWORD"
+echo "$VM_PASSWORD" | passwd --stdin root
+sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+/sbin/service sshd restart
+
+echo "YUM update"
+echo "sslverify=false" >> /etc/yum.conf
+yum update
+yum upgrade -y
 
 # fix locale warning
 echo LANG=en_US.utf-8 >> /etc/environment
 echo LC_ALL=en_US.utf-8 >> /etc/environment
 
+# install jdk
+echo 'Install JDK'
+yum install -y java-1.8.0-openjdk
+
 # add kafka user
+echo 'Install kafka'
 useradd kafka -d /opt/kafka
 
 # install kafka 2.13-3.1.0

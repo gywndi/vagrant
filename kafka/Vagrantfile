@@ -57,16 +57,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # VM private network
   config.vm.network "private_network", ip: VM_IPADDR
 
-  # Initial shell
-  config.vm.provision "shell", inline: <<-SHELL
-    echo "sslverify=false" >> /etc/yum.conf
-    echo 'root' | passwd --stdin root
-    sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
-    /sbin/service sshd restart
-  SHELL
-
   # Provision everything on the first run
-  config.vm.provision "shell", path: "scripts/install.sh"
+  config.vm.provision "shell", path: "scripts/install.sh", env: { "VM_PASSWORD" => VM_PASSWORD }
   config.vm.provision "shell", inline: "echo 'INSTALLER: Installation complete, Oracle Linux 7 ready to use!'"
 end
 
