@@ -4,7 +4,7 @@ VAGRANTFILE_API_VERSION = "2"
 # Box metadata location and box name
 BOX_URL = "https://oracle.github.io/vagrant-projects/boxes"
 BOX_NAME = "oraclelinux/7"
-BOX_MEMORY = 4096
+VM_MEMORY = 4096
 
 # UI object for printing information
 ui = Vagrant::UI::Prefixed.new(Vagrant::UI::Colored.new, "vagrant")
@@ -18,6 +18,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # define password
   VM_IPADDR = default_s('VM_IPADDR', '192.168.56.20')
+
+  # VM memory
+  VM_MEMORY = default_i('VM_MEMORY', 4096)
 end
 
 def default_s(key, default)
@@ -41,11 +44,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   # change memory size
   config.vm.provider "virtualbox" do |v|
-    v.memory = BOX_MEMORY
+    v.memory = VM_MEMORY
     v.name = VM_NAME
   end
   config.vm.provider :libvirt do |v|
-    v.memory = BOX_MEMORY
+    v.memory = VM_MEMORY
   end
 
   # VM hostname
